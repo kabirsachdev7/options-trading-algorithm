@@ -1,0 +1,44 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r ui/backend/requirements.txt
+
+      - name: Run backend tests
+        run: |
+          source venv/bin/activate
+          python -m unittest discover -s tests/unit_tests
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+
+      - name: Install frontend dependencies
+        run: |
+          cd ui/frontend
+          npm install
+
+      - name: Run frontend tests
+        run: |
+          cd ui/frontend
+          npm test -- --watchAll=false
