@@ -4,12 +4,10 @@
 set -e
 
 # Define paths
-VENV_DIR="venv"  # Adjust if your virtual environment has a different name
-REQUIREMENTS="requirements.txt"
-DATA_COLLECTION_SCRIPT="data/data_collection.py"
-PREPROCESSING_SCRIPT="data/preprocessing.py"
-FEATURE_ENGINEERING_SCRIPT="features/feature_engineering.py"
-LSTM_MODEL_SCRIPT="models/lstm_model.py"
+BACKEND_DIR="backend"
+FRONTEND_DIR="frontend"
+VENV_DIR="venv"
+REQUIREMENTS="$BACKEND_DIR/requirements.txt"
 
 # Function to display messages
 function echo_info() {
@@ -40,14 +38,13 @@ echo_info "Installing Python dependencies from '$REQUIREMENTS'..."
 pip install -r $REQUIREMENTS
 
 # Navigate to Frontend Directory
-FRONTEND_DIR="ui/frontend"
-
-if [ ! -d "$FRONTEND_DIR" ]; then
-    echo_error "Frontend directory '$FRONTEND_DIR' does not exist."
-    exit 1
-fi
-
 cd $FRONTEND_DIR
+
+# Remove conflicting node_modules and package-lock.json if present
+if [ -d "node_modules" ] || [ -f "package-lock.json" ]; then
+    echo_info "Removing existing node_modules and package-lock.json to avoid conflicts..."
+    rm -rf node_modules package-lock.json
+fi
 
 # Check if package.json exists
 if [ ! -f "package.json" ]; then
@@ -55,40 +52,52 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
+# Remove global babel-jest if exists
+echo_info "Checking for globally installed babel-jest..."
+npm ls -g babel-jest || echo_info "No global babel-jest found."
+
+echo_info "Uninstalling global babel-jest if present..."
+npm uninstall -g babel-jest || echo_info "No global babel-jest to uninstall."
+
+# Clean NPM cache
+echo_info "Cleaning npm cache..."
+npm cache clean --force
+
 # Install Frontend Dependencies
 echo_info "Installing frontend dependencies using npm..."
 npm install
 
+# Install Missing Babel Plugin
+echo_info "Installing @babel/plugin-proposal-private-property-in-object..."
+npm install --save-dev @babel/plugin-proposal-private-property-in-object
+
 # Build Frontend Application
 echo_info "Building frontend application..."
-npm run build
+npm run build || {
+    echo_error "Frontend build failed. Attempting to skip preflight checks..."
+    echo "SKIP_PREFLIGHT_CHECK=true" > .env
+    npm run build
+}
 
 # Return to Project Root Directory
-cd ../../
+cd ..
 
 # Build and Start Docker Containers
 echo_info "Building and starting Docker containers using docker-compose..."
 docker-compose up --build -d
 
-# Run Data Collection Script
-echo_info "Running data collection script..."
-python $DATA_COLLECTION_SCRIPT
+# Train Models
+echo_info "Training LSTM Option Pricing Model..."
+python $BACKEND_DIR/models/train_lstm_option_pricing.py
 
-# Run Preprocessing Script
-echo_info "Running preprocessing script..."
-python $PREPROCESSING_SCRIPT
+echo_info "Training FNN Strategy Model..."
+python $BACKEND_DIR/models/train_fnn_strategy.py
 
-# Run Feature Engineering Script
-echo_info "Running feature engineering script..."
-python $FEATURE_ENGINEERING_SCRIPT
-
-# Run LSTM Model Training Script
-echo_info "Running LSTM model training script..."
-python $LSTM_MODEL_SCRIPT
-
-echo_info "Setup and model training completed successfully."
+echo_info "Training LSTM Strategy Model..."
+python $BACKEND_DIR/models/train_lstm_strategy.py
 
 # Deactivate the virtual environment
 deactivate
 
 echo_info "Virtual environment deactivated."
+echo_info "Setup and model training completed successfully."

@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+pydantic
+pandas
+numpy
+tensorflow
+scikit-learn
+joblib
+yfinance
+finnhub-python  # Added for Finnhub API integration
+python-dotenv
+requests
+python-jose
+passlib[bcrypt]
+pytest

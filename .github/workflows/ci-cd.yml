@@ -1,0 +1,112 @@
+# .github/workflows/ci-cd.yml
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: your_dockerhub_username/options-trading-platform
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Backend Dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Backend Tests
+        run: |
+          source venv/bin/activate
+          # Add your backend test commands here
+          # Example: pytest backend/tests
+
+      - name: Install Frontend Dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Run Frontend Tests
+        run: |
+          cd frontend
+          npm test -- --watchAll=false
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Train LSTM Option Pricing Model
+        run: |
+          cd backend/models
+          python train_lstm_option_pricing.py
+
+      - name: Train FNN Strategy Model
+        run: |
+          cd backend/models
+          python train_fnn_strategy.py
+
+      - name: Train LSTM Strategy Model
+        run: |
+          cd backend/models
+          python train_lstm_strategy.py
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+
+      - name: Build and Push Docker Images
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FINNHUB_WEBHOOK_SECRET: ${{ secrets.FINNHUB_WEBHOOK_SECRET }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to Server
+        run: |
+          ssh your_username@your_server_ip 'cd /path/to/options-trading-platform && docker-compose pull && docker-compose up -d --remove-orphans'
+        env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FINNHUB_WEBHOOK_SECRET: ${{ secrets.FINNHUB_WEBHOOK_SECRET }}

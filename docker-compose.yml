@@ -5,21 +5,26 @@ version: "3.8"
 services:
   backend:
     build:
-      context: .
-      dockerfile: ui/backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: options_backend
     restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
-      - ./models:/app/models
-      - ./data:/app/data
+      - ./backend/models:/app/models
+      - ./backend/data:/app/data
+      - ./backend/logs:/app/logs # For logging
     environment:
       - PYTHONUNBUFFERED=1
+      - DATABASE_URL=${DATABASE_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - FINNHUB_API_KEY=${FINNHUB_API_KEY}
+      - FINNHUB_WEBHOOK_SECRET=${FINNHUB_WEBHOOK_SECRET}
 
   frontend:
     build:
-      context: ./ui/frontend/react-app
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: options_frontend
     restart: unless-stopped
