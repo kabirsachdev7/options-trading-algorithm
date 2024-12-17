@@ -1,75 +1,67 @@
-# backend/models/train_lstm_option_pricing.py
-
 import pandas as pd
 import numpy as np
+import yfinance as yf
+import sys
+import os
+from datetime import datetime, timedelta
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.callbacks import EarlyStopping
-import os
+from tensorflow.keras.layers import LSTM, Dense
 
-# Configuration
-DATA_PATH = "../data/merged_data_with_features_AAPL.csv"  # Update as needed
-MODEL_SAVE_PATH = "lstm_option_pricing.keras"
-TIME_STEPS = 60  # Number of past time steps to consider
-FEATURES = ['Close', 'strike', 'T', 'delta', 'gamma', 'theta', 'vega', 'rho', 'impliedVolatility']
+def compute_rsi(series, period=14):
+    delta = series.diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+    rs = gain / loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
 
-def load_data():
-    data = pd.read_csv(DATA_PATH)
-    data = data.sort_values('Date')  # Ensure data is sorted by date
+def load_data(ticker):
+    ticker_obj = yf.Ticker(ticker)
+    data = ticker_obj.history(period="2y", interval='1d')
+    if data.empty:
+        raise ValueError(f"No data found for ticker {ticker}")
+    data['SMA_50'] = data['Close'].rolling(window=50).mean()
+    data['SMA_200'] = data['Close'].rolling(window=200).mean()
+    data['RSI'] = compute_rsi(data['Close'])
+    data.dropna(inplace=True)
     return data
 
-def preprocess_data(data):
+def train_model(ticker):
+    data = load_data(ticker)
+    features = data[['Close','SMA_50','SMA_200','RSI']]
+    target = data['Close'].shift(-1)
+    features = features[:-1]
+    target = target[:-1]
+
+    split = int(0.8 * len(features))
+    X_train, X_test = features[:split], features[split:]
+    y_train, y_test = target[:split], target[split:]
+
     scaler = MinMaxScaler()
-    scaled_data = scaler.fit_transform(data[FEATURES])
-    return scaled_data, scaler
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
 
-def create_sequences(data, time_steps):
-    X = []
-    y = []
-    for i in range(time_steps, len(data)):
-        X.append(data[i-time_steps:i])
-        y.append(data[i][0])  # Assuming 'Close' is the target
-    X, y = np.array(X), np.array(y)
-    return X, y
+    # LSTM expects [samples, timesteps, features], we have 1 timestep here
+    X_train_scaled = X_train_scaled.reshape((X_train_scaled.shape[0], 1, X_train_scaled.shape[1]))
+    X_test_scaled = X_test_scaled.reshape((X_test_scaled.shape[0], 1, X_test_scaled.shape[1]))
 
-def build_model(input_shape):
     model = Sequential()
-    model.add(LSTM(units=50, return_sequences=True, input_shape=input_shape))
-    model.add(Dropout(0.2))
-    model.add(LSTM(units=50, return_sequences=False))
-    model.add(Dropout(0.2))
-    model.add(Dense(units=25))
-    model.add(Dense(units=1))
-    
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    return model
+    model.add(LSTM(50, input_shape=(1, X_train.shape[1])))
+    model.add(Dense(1))
+    model.compile(optimizer='adam', loss='mse')
 
-def train_model():
-    data = load_data()
-    scaled_data, scaler = preprocess_data(data)
-    X, y = create_sequences(scaled_data, TIME_STEPS)
-    
-    # Split into training and testing sets
-    split = int(0.8 * len(X))
-    X_train, X_test = X[:split], X[split:]
-    y_train, y_test = y[:split], y[split:]
-    
-    model = build_model((X_train.shape[1], X_train.shape[2]))
-    
-    early_stop = EarlyStopping(monitor='val_loss', patience=10)
-    
-    history = model.fit(
-        X_train, y_train,
-        batch_size=32,
-        epochs=100,
-        validation_data=(X_test, y_test),
-        callbacks=[early_stop]
-    )
-    
-    # Save the model
-    model.save(MODEL_SAVE_PATH)
-    print(f"Model saved to {MODEL_SAVE_PATH}")
+    model.fit(X_train_scaled, y_train, epochs=20, batch_size=32, validation_data=(X_test_scaled, y_test))
+
+    models_dir = 'models'
+    if not os.path.exists(models_dir):
+        os.makedirs(models_dir)
+    model.save(f'{models_dir}/lstm_option_pricing_{ticker}.h5')
+    print(f"LSTM Option Pricing Model trained and saved for ticker {ticker}.")
 
 if __name__ == "__main__":
-    train_model()
+    if len(sys.argv) != 2:
+        print("Usage: python train_lstm_option_pricing.py <TICKER>")
+        sys.exit(1)
+    ticker = sys.argv[1].upper()
+    train_model(ticker)

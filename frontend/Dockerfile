@@ -1,4 +1,4 @@
-# Stage 1: Build React app
+# Stage 1: Build the React app
 FROM node:16-alpine as build
 
 WORKDIR /app
@@ -6,20 +6,20 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
 
-COPY . ./
+COPY . .
 RUN npm run build
 
-# Stage 2: Serve app with Nginx
+# Stage 2: Serve the React app with Nginx
 FROM nginx:1.23-alpine
 
-# Remove default nginx website
+# Remove default nginx static assets
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy built React app from Stage 1
+# Copy the build output to nginx html directory
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Expose port
+# Expose port 80
 EXPOSE 80
 
-# Start Nginx server
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]

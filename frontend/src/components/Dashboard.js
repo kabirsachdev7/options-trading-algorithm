@@ -12,7 +12,6 @@ import {
   Tab,
 } from "react-bootstrap";
 import StrategyList from "./StrategyList";
-import io from "socket.io-client";
 
 const Dashboard = () => {
   const [tickers, setTickers] = useState([]);
@@ -20,21 +19,17 @@ const Dashboard = () => {
   const [predictions, setPredictions] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    // Initialize WebSocket connection
-    const newSocket = io(
-      `${process.env.REACT_APP_API_URL.replace(/^http/, "ws")}/ws`
-    );
-    setSocket(newSocket);
-    return () => newSocket.close();
-  }, [setSocket]);
+    // Initialize WebSocket connection to backend
+    const wsUrl = `${process.env.REACT_APP_API_URL.replace(/^http/, "ws")}/ws`;
+    const ws = new WebSocket(wsUrl);
 
-  useEffect(() => {
-    if (socket) {
-      socket.on("message", (data) => {
-        const message = JSON.parse(data);
+    ws.onmessage = (event) => {
+      // Expecting messages in JSON format containing
+      // { ticker, predicted_close, recommended_strategies }
+      try {
+        const message = JSON.parse(event.data);
         const { ticker, predicted_close, recommended_strategies } = message;
         setPredictions((prev) => ({
           ...prev,
@@ -43,9 +38,23 @@ const Dashboard = () => {
             recommended_strategies,
           },
         }));
-      });
-    }
-  }, [socket]);
+      } catch (err) {
+        console.error("Error parsing WebSocket message:", err);
+      }
+    };
+
+    ws.onerror = (errorEvent) => {
+      console.error("WebSocket error:", errorEvent);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket connection closed.");
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
 
   const handleAddTicker = () => {
     const ticker = selectedTicker.trim().toUpperCase();
@@ -61,9 +70,7 @@ const Dashboard = () => {
       setLoading(true);
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}/predict`,
-        {
-          ticker,
-        },
+        { ticker },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -82,6 +89,10 @@ const Dashboard = () => {
           error: err.response ? err.response.data.detail : "Server Error",
         },
       }));
+      setError(
+        "Failed to fetch prediction. " +
+          (err.response ? err.response.data.detail : "")
+      );
       setLoading(false);
     }
   };
@@ -133,8 +144,6 @@ const Dashboard = () => {
                       <StrategyList
                         strategies={predictions[ticker].recommended_strategies}
                       />
-                      {/* Placeholder for charts or additional data */}
-                      {/* Implement charts as needed */}
                     </>
                   )
                 ) : (

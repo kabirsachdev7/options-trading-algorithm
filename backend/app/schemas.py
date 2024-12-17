@@ -1,3 +1,5 @@
+# backend/app/schemas.py
+
 from typing import List, Optional
 from pydantic import BaseModel
 
@@ -8,11 +10,13 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
-class User(UserBase):
+class User(BaseModel):
     id: int
+    username: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
 
 # Token Schemas
 class Token(BaseModel):

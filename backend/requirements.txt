@@ -1,5 +1,6 @@
 fastapi
 uvicorn
+pydantic-settings
 pydantic
 pandas
 numpy
@@ -7,9 +8,10 @@ tensorflow
 scikit-learn
 joblib
 yfinance
-finnhub-python  # Added for Finnhub API integration
 python-dotenv
 requests
 python-jose
 passlib[bcrypt]
 pytest
+sqlalchemy
+python-multipart

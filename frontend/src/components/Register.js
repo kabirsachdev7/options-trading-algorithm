@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Container, Form, Button, Alert } from "react-bootstrap";
@@ -20,13 +20,10 @@ const Register = () => {
       return;
     }
     try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/register`,
-        {
-          username,
-          password,
-        }
-      );
+      await axios.post(`${process.env.REACT_APP_API_URL}/register`, {
+        username,
+        password,
+      });
       setSuccess("Registration successful. You can now log in.");
       setUsername("");
       setPassword("");
