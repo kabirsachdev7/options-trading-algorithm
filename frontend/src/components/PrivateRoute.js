@@ -1,6 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -10,7 +10,7 @@ const PrivateRoute = ({ children }) => {
   }
 
   try {
-    const decoded = jwt_decode(token);
+    const decoded = jwtDecode(token);
     if (decoded.exp * 1000 < Date.now()) {
       // Token expired
       localStorage.removeItem("token");
