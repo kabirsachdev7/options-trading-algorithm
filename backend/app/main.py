@@ -175,6 +175,10 @@ def predict_endpoint(
             "recommended_strategies": recommended_strategies,
             "data_source": f"{data_source} (Price), Yahoo Finance (Options)"
         }
+    
+    except Exception as e:
+        logging.error(f"Unhandled exception in predict_endpoint: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error.")
 
 @app.get("/price/{ticker}", response_model=schemas.PriceResponse)
 def get_price(
