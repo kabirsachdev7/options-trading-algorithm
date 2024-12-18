@@ -1,3 +1,5 @@
+# backend/app/strategy.py
+
 from fastapi import HTTPException
 import numpy as np
 from app.utils.model_utils import ModelUtils
@@ -16,9 +18,9 @@ def get_execution_steps(strategy: str) -> str:
     elif strategy == "protective_put":
         return "Hold the underlying and buy a put option for downside protection."
     elif strategy == "straddle":
-        return "Buy both a call and a put at the same strike."
+        return "Buy a call and a put at the same strike."
     elif strategy == "strangle":
-        return "Buy both a call and a put at different strikes but same expiration."
+        return "Buy a call and a put at different strikes, same expiration."
     elif strategy == "butterfly":
         return "Combine options at three different strike prices."
     else:
@@ -30,8 +32,12 @@ def make_prediction(ticker: str, data, time_steps=60):
         raise HTTPException(status_code=400, detail="Not enough data for prediction.")
     latest_data = data[FEATURES].tail(time_steps).values
     latest_data = np.reshape(latest_data, (1, time_steps, len(FEATURES)))
-    predicted_close = model_utils.predict_option_price(ticker, latest_data)
-    return float(predicted_close)
+    try:
+        predicted_close = model_utils.predict_option_price(ticker, latest_data)
+    except ValueError as e:
+        # Model not found or not trained
+        raise HTTPException(status_code=500, detail=str(e))
+    return predicted_close
 
 def generate_strategies(ticker: str, predicted_close: float, data):
     latest_features = data.iloc[-1][['Close','strike','T','impliedVolatility','moneyness','lastPrice','volume','openInterest','option_type_encoded']].values.reshape(1,-1)

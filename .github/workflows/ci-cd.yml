@@ -1,5 +1,3 @@
-# .github/workflows/ci-cd.yml
-
 name: CI/CD Pipeline
 
 on:
@@ -17,7 +15,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -25,12 +22,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: "16"
 
       - name: Install Backend Dependencies
         run: |
@@ -42,8 +39,7 @@ jobs:
       - name: Run Backend Tests
         run: |
           source venv/bin/activate
-          # Add your backend test commands here
-          # Example: pytest backend/tests
+          # pytest backend/tests (if tests exist)
 
       - name: Install Frontend Dependencies
         run: |
@@ -60,15 +56,16 @@ jobs:
           cd frontend
           npm run build
 
+      # Train models with example tickers
       - name: Train LSTM Option Pricing Model
         run: |
           cd backend/models
-          python train_lstm_option_pricing.py
+          python train_lstm_option_pricing.py AAPL
 
       - name: Train FNN Strategy Model
         run: |
           cd backend/models
-          python train_fnn_strategy.py
+          python train_fnn_strategy.py AAPL MSFT
 
       - name: Train LSTM Strategy Model
         run: |
@@ -87,14 +84,10 @@ jobs:
           context: .
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-        env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
-          FINNHUB_WEBHOOK_SECRET: ${{ secrets.FINNHUB_WEBHOOK_SECRET }}
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -107,6 +100,3 @@ jobs:
       - name: Deploy to Server
         run: |
           ssh your_username@your_server_ip 'cd /path/to/options-trading-platform && docker-compose pull && docker-compose up -d --remove-orphans'
-        env:
-          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
-          FINNHUB_WEBHOOK_SECRET: ${{ secrets.FINNHUB_WEBHOOK_SECRET }}

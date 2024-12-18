@@ -1,9 +1,10 @@
+# backend/app/utils/model_utils.py
+
 import os
 import joblib
 import numpy as np
-import pandas as pd
-import yfinance as yf
 from tensorflow.keras.models import load_model
+from fastapi import HTTPException
 
 class ModelUtils:
     def __init__(self):
@@ -20,16 +21,23 @@ class ModelUtils:
         path = f"/app/models/lstm_option_pricing_{ticker}.h5"
         if os.path.exists(path):
             return load_model(path)
-        raise ValueError(f"LSTM model not found for ticker {ticker}")
+        else:
+            # Raise an error if model doesn't exist
+            raise FileNotFoundError(f"LSTM model not found for ticker {ticker}. Need to train it.")
 
     def predict_option_price(self, ticker, input_data):
         # input_data is (1, time_steps, feature_count)
-        lstm_model = self.load_lstm_model(ticker)
+        try:
+            lstm_model = self.load_lstm_model(ticker)
+        except FileNotFoundError as e:
+            # Propagate this error up for handling in main.py
+            raise ValueError(str(e))
         prediction = lstm_model.predict(input_data)
-        return prediction[0][0]
+        return float(prediction[0][0])
 
     def recommend_strategy(self, input_data):
         if self.fnn_model is None or self.fnn_scaler is None or self.fnn_label_encoder is None:
+            # If strategy model not trained or missing
             return "hold"
         scaled_data = self.fnn_scaler.transform(input_data)
         preds = self.fnn_model.predict(scaled_data)
