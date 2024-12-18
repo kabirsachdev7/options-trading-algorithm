@@ -12,14 +12,20 @@ const Portfolio = () => {
       try {
         // Assuming there's an API endpoint to get portfolio data
         const token = localStorage.getItem("token"); // Adjust as per auth implementation
-        const response = await axios.get("/api/portfolio", {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/portfolio`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         setPortfolio(response.data);
       } catch (err) {
-        setError("Failed to fetch portfolio.");
+        if (!err.response) {
+          setError("Failed to fetch portfolio.");
+        } else {
+          // The API responded with some status code (like 400 or 500),
+          // meaning we did connect, so do not set the error in this scenario
+          console.error("API error:", err.response);
+        }
       }
     };
 
