@@ -1,7 +1,8 @@
+// Register.js
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Container, Form, Button, Alert } from "react-bootstrap";
+import { Container, Form, Button, Alert, Card } from "react-bootstrap";
 
 const Register = () => {
   const [username, setUsername] = useState("");
@@ -24,7 +25,7 @@ const Register = () => {
         username,
         password,
       });
-      setSuccess("Registration successful. You can now log in.");
+      setSuccess("Registration successful. Redirecting to login...");
       setUsername("");
       setPassword("");
       setConfirmPassword("");
@@ -35,48 +36,56 @@ const Register = () => {
   };
 
   return (
-    <Container style={{ maxWidth: "400px", marginTop: "50px" }}>
-      <h2>Register</h2>
-      {error && <Alert variant="danger">{error}</Alert>}
-      {success && <Alert variant="success">{success}</Alert>}
-      <Form onSubmit={handleSubmit}>
-        <Form.Group controlId="username">
-          <Form.Label>Username</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </Form.Group>
+    <Container style={{ maxWidth: "400px", marginTop: "80px" }}>
+      <Card
+        style={{
+          backgroundColor: "#1e1e1e",
+          borderRadius: "8px",
+          padding: "20px",
+        }}
+      >
+        <h2 className="mb-4">Register</h2>
+        {error && <Alert variant="danger">{error}</Alert>}
+        {success && <Alert variant="success">{success}</Alert>}
+        <Form onSubmit={handleSubmit}>
+          <Form.Group controlId="username" className="mt-3">
+            <Form.Label>Username</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Choose a username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </Form.Group>
 
-        <Form.Group controlId="password" className="mt-3">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </Form.Group>
+          <Form.Group controlId="password" className="mt-3">
+            <Form.Label>Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Enter a secure password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </Form.Group>
 
-        <Form.Group controlId="confirmPassword" className="mt-3">
-          <Form.Label>Confirm Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Confirm password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-          />
-        </Form.Group>
+          <Form.Group controlId="confirmPassword" className="mt-3">
+            <Form.Label>Confirm Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Re-enter your password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </Form.Group>
 
-        <Button variant="primary" type="submit" className="mt-4" block>
-          Register
-        </Button>
-      </Form>
+          <Button variant="primary" type="submit" className="mt-4 w-100">
+            Register
+          </Button>
+        </Form>
+      </Card>
     </Container>
   );
 };

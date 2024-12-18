@@ -12,25 +12,23 @@ const NavigationBar = () => {
   };
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg">
+    <Navbar expand="lg" className="mb-3" variant="dark">
       <Container>
         <Navbar.Brand as={Link} to="/">
           Options Trading Platform
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-        <Nav className="me-auto">
-            {token && (
-              <>
-                <Nav.Link as={Link} to="/">
-                  Dashboard
-                </Nav.Link>
-                <Nav.Link as={Link} to="/portfolio">
-                  Portfolio
-                </Nav.Link>
-              </>
-            )}
-          </Nav>
+          {token && (
+            <Nav className="me-auto">
+              <Nav.Link as={Link} to="/">
+                Dashboard
+              </Nav.Link>
+              <Nav.Link as={Link} to="/portfolio">
+                Portfolio
+              </Nav.Link>
+            </Nav>
+          )}
           <Nav>
             {token ? (
               <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
