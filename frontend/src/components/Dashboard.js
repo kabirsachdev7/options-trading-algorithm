@@ -85,7 +85,7 @@ const Dashboard = () => {
   const [watchlistTicker, setWatchlistTicker] = useState("");
 
   return (
-    <Container fluid style={{ marginLeft: "220px", paddingTop: "30px" }}>
+    <Container fluid style={{ width: "88vw", marginInline:"12vw", paddingTop: "30px" }}>
       <h2 className="mb-4" style={{ color: "#ffffff" }}>
         Options Trading Dashboard
       </h2>
