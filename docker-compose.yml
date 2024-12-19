@@ -4,6 +4,8 @@ version: "3.8"
 
 services:
   backend:
+    env_file:
+      - .env
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -21,6 +23,7 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - FINNHUB_API_KEY=${FINNHUB_API_KEY}
       - FINNHUB_WEBHOOK_SECRET=${FINNHUB_WEBHOOK_SECRET}
+      - NEWSAPI_KEY=${NEWSAPI_KEY}
 
   frontend:
     build:
@@ -34,6 +37,7 @@ services:
       - backend
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     command: ["npm", "start"]
     environment:
       - CHOKIDAR_USEPOLLING=true

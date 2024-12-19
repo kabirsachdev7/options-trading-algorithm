@@ -15,7 +15,7 @@ class User(BaseModel):
     username: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Token Schemas
 class Token(BaseModel):
@@ -49,7 +49,7 @@ class Holding(HoldingBase):
     id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PortfolioBase(BaseModel):
     name: str
@@ -63,7 +63,7 @@ class Portfolio(PortfolioBase):
     holdings: List[Holding] = []
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Risk Metrics
 class RiskMetrics(BaseModel):

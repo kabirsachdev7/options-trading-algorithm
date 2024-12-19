@@ -39,7 +39,9 @@ logging.basicConfig(
 load_dotenv()
 
 # Create all database tables
-Base.metadata.create_all(bind=engine)
+if not engine.dialect.has_table(engine, "users"):
+    Base.metadata.create_all(bind=engine)
+
 
 # Initialize FastAPI app
 app = FastAPI()

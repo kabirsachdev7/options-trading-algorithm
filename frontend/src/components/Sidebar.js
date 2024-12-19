@@ -17,7 +17,7 @@ const Sidebar = () => {
         padding: "20px",
       }}
     >
-      <Nav className="flex-column">
+      <Nav style={{marginTop:"30px"}} className="flex-column">
         <Nav.Link as={Link} to="/" style={{ color: "#ffffff" }}>
           <FaTachometerAlt style={{ marginRight: "8px" }} />
           Dashboard
