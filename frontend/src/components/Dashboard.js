@@ -73,26 +73,26 @@ const Dashboard = () => {
 
   const handleAddTicker = async () => {
     const ticker = selectedTicker.trim().toUpperCase();
-    // if (ticker && !tickers.includes(ticker)) {
-    //   setTickers([...tickers, ticker]);
-    //   setSelectedTicker("");
-    //   await fetchPrediction(ticker);
-    // }
-    /*       USE THE CODE BELOW TO TEST THAT THE OPTIONS CHART SHOWS FOR QUICK ADD STOCKS     */
     if (ticker && !tickers.includes(ticker)) {
       setTickers([...tickers, ticker]);
       setSelectedTicker("");
-      // Instead of calling the API for now, set mock predictions
-      setPredictions((prev) => ({
-        ...prev,
-        [ticker]: {
-          predicted_close: 123.45,
-          recommended_strategies: [
-            { name: "Call Spread", confidence: "High", details: "Mock strategy details..." },
-          ],
-        },
-      }));
+      await fetchPrediction(ticker);
     }
+    /*       USE THE CODE BELOW TO TEST THAT THE OPTIONS CHART SHOWS FOR QUICK ADD STOCKS     */
+    // if (ticker && !tickers.includes(ticker)) {
+    //   setTickers([...tickers, ticker]);
+    //   setSelectedTicker("");
+    //   // Instead of calling the API for now, set mock predictions
+    //   setPredictions((prev) => ({
+    //     ...prev,
+    //     [ticker]: {
+    //       predicted_close: 123.45,
+    //       recommended_strategies: [
+    //         { name: "Call Spread", confidence: "High", details: "Mock strategy details..." },
+    //       ],
+    //     },
+    //   }));
+    // }
   };
 
   const fetchPrediction = async (ticker) => {
