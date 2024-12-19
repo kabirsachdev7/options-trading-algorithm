@@ -12,32 +12,37 @@ const NavigationBar = () => {
   };
 
   return (
-    <Navbar expand="lg" className="mb-3" variant="dark">
+    <Navbar expand="lg" style={{ backgroundColor: "#121212" }}>
       <Container>
-        <Navbar.Brand as={Link} to="/">
+        <Navbar.Brand as={Link} to="/" style={{ color: "#00c853" }}>
           Options Trading Platform
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Toggle
+          aria-controls="basic-navbar-nav"
+          style={{ color: "#ffffff" }}
+        />
         <Navbar.Collapse id="basic-navbar-nav">
           {token && (
             <Nav className="me-auto">
-              <Nav.Link as={Link} to="/">
+              <Nav.Link as={Link} to="/" style={{ color: "#ffffff" }}>
                 Dashboard
               </Nav.Link>
-              <Nav.Link as={Link} to="/portfolio">
+              <Nav.Link as={Link} to="/portfolio" style={{ color: "#ffffff" }}>
                 Portfolio
               </Nav.Link>
             </Nav>
           )}
           <Nav>
             {token ? (
-              <Nav.Link onClick={handleLogout}>Logout</Nav.Link>
+              <Nav.Link onClick={handleLogout} style={{ color: "#ffffff" }}>
+                Logout
+              </Nav.Link>
             ) : (
               <>
-                <Nav.Link as={Link} to="/login">
+                <Nav.Link as={Link} to="/login" style={{ color: "#ffffff" }}>
                   Login
                 </Nav.Link>
-                <Nav.Link as={Link} to="/register">
+                <Nav.Link as={Link} to="/register" style={{ color: "#ffffff" }}>
                   Register
                 </Nav.Link>
               </>

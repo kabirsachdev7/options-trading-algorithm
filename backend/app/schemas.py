@@ -15,8 +15,7 @@ class User(BaseModel):
     username: str
 
     class Config:
-        from_attributes = True
-
+        orm_mode = True
 
 # Token Schemas
 class Token(BaseModel):
@@ -31,6 +30,7 @@ class StrategyResponse(BaseModel):
     ticker: str
     predicted_close: float
     recommended_strategies: List[dict]
+    data_source: Optional[str] = None  # Added for clarity
 
 # Price Response
 class PriceResponse(BaseModel):
@@ -69,3 +69,10 @@ class Portfolio(PortfolioBase):
 class RiskMetrics(BaseModel):
     var: float  # Value at Risk
     sharpe_ratio: float
+
+# News Article Schema (Newly Added)
+class NewsArticle(BaseModel):
+    title: str
+    description: Optional[str]
+    url: str
+    source: str
